@@ -1,0 +1,10 @@
+name: demo-tps
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - openpathsampling  # =1.7
+  - openpathsampling-cli  # =0.4
+  - openmm
+  - openmm-setup
+    # patheract  # pip install

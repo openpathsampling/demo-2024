@@ -1,0 +1,74 @@
+engines: 
+  - type: openmm
+    name: engine
+    system: system_amber96.xml
+    integrator: setup/integrator.xml
+    topology: ad.pdb
+    n_steps_per_frame: 10
+    n_frames_max: 10000
+  - type: openmm
+    name: 500K
+    system: system_amber96.xml
+    integrator: setup/hi_temp_integrator.xml
+    topology: ad.pdb
+    n_steps_per_frame: 10
+    n_frames_max: 10000
+
+cvs:
+  - name: phi
+    type: mdtraj
+    topology: ad.pdb
+    period_min: -np.pi
+    period_max: np.pi
+    func: compute_dihedrals
+    kwargs:
+      indices: [[4, 6, 8, 14]]
+  - name: psi
+    type: mdtraj
+    topology: ad.pdb
+    period_min: -np.pi
+    period_max: np.pi
+    func: compute_dihedrals
+    kwargs:
+      indices: [[6, 8, 14, 16]]
+
+states:
+  - name: alpha_R
+    type: intersection
+    subvolumes:
+      - type: cv-volume
+        cv: psi
+        lambda_min: -100 * np.pi / 180
+        lambda_max: 0.0
+      - type: cv-volume
+        cv: phi
+        lambda_min: -np.pi
+        lambda_max: 0
+  - name: C_7eq
+    type: intersection
+    subvolumes:
+      - type: cv-volume
+        cv: psi
+        lambda_min: 100 * np.pi / 180
+        lambda_max: 200 * np.pi / 180
+      - type: cv-volume
+        cv: phi
+        lambda_min: -np.pi
+        lambda_max: 0
+
+networks:
+  - type: tps
+    name: tps-network
+    initial_states:
+      - C_7eq
+    final_states:
+      - alpha_R
+
+schemes:
+  - type: one-way-shooting
+    name: one-way-scheme
+    network: tps-network
+    selector: 
+      type: uniform
+    engine: engine
+
